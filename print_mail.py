@@ -1,12 +1,11 @@
 # Skrivet av Mikael Padwick för Åva Båtsällskap utan någon som helst support eller garanti av funktion.
-# Ver 1.2.2
+# Ver 1.2.3
 
 import os
 import sys
 sys.path.append(os.getcwd()+'\Lib\site-packages')
 from imbox import Imbox # pip install imbox
 import traceback
-#import ghostscript
 from datetime import date, datetime
 import subprocess
 import time
@@ -75,6 +74,8 @@ def my_print_file(filepath):
             ghostscript = args + '\"' + filepath.replace('\\', '\\\\') + '\"'
             subprocess.call(ghostscript, shell=True)
             my_log("Printer file now: " + filepath)
+            global sendmail
+            sendmail = 1
         except:
             print(traceback.print_exc())
             my_log("Failed to print file: " + filepath)
@@ -90,7 +91,7 @@ if not os.path.isdir(log_folder):
     
 mail = Imbox(host, port=port, username=username, password=password, ssl=True, ssl_context=None, starttls=False)
 messages = mail.messages(unread=True,subject=f'{Subject}') # Unread messages
-
+sendmail = 0
 for (uid, message) in messages:
     mail.mark_seen(uid) # optional, mark message as read   
     for idx, attachment in enumerate(message.attachments):
@@ -99,9 +100,9 @@ for (uid, message) in messages:
             if att_fn.endswith(tuple(suffixes)):
                 download_path = f"{download_folder}\{date.today()}_{att_fn}"
                 print(download_path)
-                my_download_file(attachment, download_path)                       
+                my_download_file(attachment, download_path)                     
         except:
-            print(traceback.print_exc())    
-    my_sendmail(message.sent_from[0]['email'])
-    
+            print(traceback.print_exc())
+    if sendmail == 1:
+        my_sendmail(message.sent_from[0]['email'])
 mail.logout()
