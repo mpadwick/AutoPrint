@@ -6,7 +6,7 @@ import sys
 sys.path.append(os.getcwd()+'\Lib\site-packages')
 from imbox import Imbox # pip install imbox
 import traceback
-import ghostscript
+#import ghostscript
 from datetime import date, datetime
 import subprocess
 import time
