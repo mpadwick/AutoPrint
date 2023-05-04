@@ -1,5 +1,5 @@
 # Skrivet av Mikael Padwick för Åva Båtsällskap utan någon som helst support eller garanti av funktion.
-# Ver 1.2.1
+# Ver 1.2.2
 
 import os
 import sys
@@ -52,22 +52,32 @@ def my_log(text):
     log.write(datetime.now().strftime("%H:%M:%S") + " " + text + "\n")
     log.close()
     
-def my_print_file(attachment, filepath):
-    GS = GSPath + '\\bin\gswin64c.exe'
-    if att_fn.endswith(tuple(suffixes)):
+def my_download_file(attachment, filepath):
+    try:
         with open(filepath, "wb") as fp:
-            fp.write(attachment.get('content').read())
-               
+            fp.write(attachment.get('content').read())               
+        my_log("Saved file to: " + filepath)
+        my_print_file(filepath)
+    except:
+            print(traceback.print_exc())    
+        
+def my_print_file(filepath):  
+    if filepath.endswith('pdf'):
+        GS = GSPath + '\\bin\gswin64c.exe'       
         args = f'\"{GS}\" ' \
                '-sDEVICE=mswinpr2 ' \
                '-dBATCH ' \
                '-dNOPAUSE ' \
                f'-sOutputFile#"%printer%{printer}" '
                 
-        my_log("Sending to printer: " + filepath)
-        ghostscript = args + '\"' + filepath.replace('\\', '\\\\') + '\"'
-        subprocess.call(ghostscript, shell=True)
-        my_log("Printer file now: " + filepath)
+        my_log("Sending file to printer: " + filepath)
+        try:
+            ghostscript = args + '\"' + filepath.replace('\\', '\\\\') + '\"'
+            subprocess.call(ghostscript, shell=True)
+            my_log("Printer file now: " + filepath)
+        except:
+            print(traceback.print_exc())
+            my_log("Failed to print file: " + filepath)
 
 download_folder = os.getcwd()+"\Download"
 log_folder = os.getcwd()+"\Log"
@@ -84,13 +94,12 @@ messages = mail.messages(unread=True,subject=f'{Subject}') # Unread messages
 for (uid, message) in messages:
     mail.mark_seen(uid) # optional, mark message as read   
     for idx, attachment in enumerate(message.attachments):
-        print(attachment.get('filename'))
+        att_fn = attachment.get('filename').lower()
         try:
-            att_fn = attachment.get('filename')
-            #att_fn.replace(" ", "_")
-            print(att_fn)
-            download_path = f"{download_folder}\{date.today()}_{att_fn}"
-            my_print_file(attachment, download_path)                
+            if att_fn.endswith(tuple(suffixes)):
+                download_path = f"{download_folder}\{date.today()}_{att_fn}"
+                print(download_path)
+                my_download_file(attachment, download_path)                       
         except:
             print(traceback.print_exc())    
     my_sendmail(message.sent_from[0]['email'])
