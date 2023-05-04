@@ -1,5 +1,5 @@
 # Skrivet av Mikael Padwick för Åva Båtsällskap utan någon som helst support eller garanti av funktion.
-# Ver 1.2
+# Ver 1.2.1
 
 import os
 import sys
@@ -26,23 +26,24 @@ def my_sendmail(sendto):
     try:
         # Craft the email by hand
         from_email = f"Skrivaren i garaget <{username}>"  # or simply the email address
-        to_emails = [sendto,]
-        body = "Ditt dokument kommer nu att skrivas ut på skrivaren i garaget på Åva Båtsällskap"
+        to_emails = [sendto]
+        body = f"Ditt dokument kommer nu att skrivas ut på skrivaren i garaget på Åva Båtsällskap"
         headers = f"From: {from_email}\r\n"
-        headers += f"To: {', '.join(to_emails)}\r\n" 
+        headers += f"To: {', '.join(to_emails)}\r\n"
         headers += f"Subject: Du har skicka ett dokument för utskrift\r\n"
-        email_message = headers + "\r\n" + body  # Blank line needed between headers and body
-    
+        email_message = headers + "\r\n" + body # Blank line needed between headers and body
+        
         # Connect, authenticate, and send mail
         smtp_server = SMTP_SSL(host, port=SMTP_SSL_PORT)
         smtp_server.set_debuglevel(1)  # Show SMTP server interactions
         smtp_server.login(username, password)
-        smtp_server.sendmail(from_email, to_emails, email_message)
+        smtp_server.sendmail(from_email, to_emails, email_message.encode('utf-8'))
 
         # Disconnect
         smtp_server.quit()
-        my_log("Sending acknowledgement email.")
+        my_log(f"Sending acknowledgement email to {sendto}")
     except:
+        print(traceback.print_exc())
         my_log("Failed sending acknowledgement email.")
 
 def my_log(text):
